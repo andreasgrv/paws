@@ -15,8 +15,8 @@ between the sentences that were analyzed.
 
 # Current Data
 
-Current word relation data in file wnsyns.tsv is from [Wordnet](http://wordnet.princeton.edu/) and 
-exists for demonstration purposes. The format of the data in the tsv file represents links in the graph 
+Current word relation data in file wnsyns.tsv was created using data from [Wordnet](http://wordnet.princeton.edu/) and exists for demonstration purposes. 
+The format of the data in the tsv file represents links in the graph 
 and can be replaced with your own.
 
 # Dependencies
