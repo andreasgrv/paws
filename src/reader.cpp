@@ -17,7 +17,7 @@ void strip(char target, std::string& str){
 } 
 
 std::vector<std::vector<std::string>>& reader::read(std::string file,
-										std::vector<std::vector<std::string>>& lines){
+		std::vector<std::vector<std::string>>& lines){
 	std::ifstream fs {file};
 	if(fs){
 		std::string line;

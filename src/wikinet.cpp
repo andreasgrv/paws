@@ -87,7 +87,7 @@ namespace wiki{
 	void booleanScore(bool& target, bool& weight, int depth){
 		target = 1;
 	}
-	
+
 	void countScore(int& target, int& weight, int depth){
 		target++;
 	}

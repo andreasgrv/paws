@@ -42,7 +42,7 @@ int main(int argc, const char* argv[]){
 	vector<vector<string>> words {};
 
 	words = reader::read(datapath + filename, words);
-	
+
 	wiki::WikiNet net {words};
 
 	while(1){
@@ -243,8 +243,8 @@ int main(int argc, const char* argv[]){
 				}
 				wiki::getIterativeConcentrationScore(net, v1, node1, depth, weight);
 				wiki::getIterativeConcentrationScore(net, v2, node2, depth, weight);
-//				v1.normalize();
-//				v2.normalize();
+				//				v1.normalize();
+				//				v2.normalize();
 				if(usethreshold){
 					v1.threshold(threshold);
 				}
@@ -303,8 +303,10 @@ int main(int argc, const char* argv[]){
 					cout<<notfound<<endl;
 					continue;
 				}
-				wiki::getRecursiveScore(net, v1, node1, node1, depth, depth+1, weight, wiki::recursiveSimilarity);
-				wiki::getRecursiveScore(net, v2, node2, node2, depth, depth+1, weight, wiki::recursiveSimilarity);
+				wiki::getRecursiveScore(net, v1, node1, node1, depth,
+						depth+1, weight, wiki::recursiveSimilarity);
+				wiki::getRecursiveScore(net, v2, node2, node2, depth,
+						depth+1, weight, wiki::recursiveSimilarity);
 				if(usethreshold){
 					v1.threshold(threshold);
 				}

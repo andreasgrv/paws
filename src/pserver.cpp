@@ -20,7 +20,7 @@ int main(int argc, const char* argv[]){
 		mode = argv[2];
 		if(options.find(mode) == options.end()){
 			cout<<"mode selected not valid, please choose a mode from : "
-			   	"boolean, count, countdepth, dispersion, dispersion+, "
+				"boolean, count, countdepth, dispersion, dispersion+, "
 				"concentration+, robinhood or recursive"<<endl;
 			return 1;
 		}
@@ -43,279 +43,279 @@ int main(int argc, const char* argv[]){
 	vector<vector<string>> defs {};
 
 	defs = reader::read(datapath + filename, defs);
-	
+
 	wiki::WikiNet net {defs};
 
 	while(1){
-			// Read text from stdin
-			vector< vector<string> > phrase{};
-			bool usethreshold = false;
-			double threshold = 0.0;
+		// Read text from stdin
+		vector< vector<string> > phrase{};
+		bool usethreshold = false;
+		double threshold = 0.0;
+		for(int numphrase=0; numphrase < pcomp; numphrase++){
+			for (string line; getline(cin, line);){
+				istringstream sline {line};
+				vector<string> words{};
+				string target{};
+				while(sline.good()){
+					getline(sline,target,' ');
+					words.push_back(target);
+				}
+				if(words.size() == 1){
+					if(words[0] == "exit"){
+						cout<<"Byee!!"<<endl;
+						return 0;
+					}
+					phrase.push_back(words);
+					break;
+				}
+				else if(words.size() >= 2){
+					phrase.push_back(words);
+					break;
+				}
+				else{
+					cout<<"Format should be : phrase1 \\n phrase2 \\n,"
+						" where words are strings , all separated by gaps"
+						" or the word exit alone, to end the programme"<<endl;
+					break;
+				}
+			}
+		}
+
+		if(mode == "boolean"){
+			bool weight = 1;
+			vector< sv::SparseVec<bool> > vecs;
+			sv::SparseVec<bool> total;
 			for(int numphrase=0; numphrase < pcomp; numphrase++){
-				for (string line; getline(cin, line);){
-					istringstream sline {line};
-					vector<string> words{};
-					string target{};
-					while(sline.good()){
-						getline(sline,target,' ');
-						words.push_back(target);
+				sv::SparseVec<bool> vec;
+				for(auto each : phrase[numphrase]){
+					wiki::WordNode* node1 = net.getNode(each);
+					if(node1 == nullptr){
+						net.addWord(each);	
+						node1 = net.getNode(each);
 					}
-					if(words.size() == 1){
-						if(words[0] == "exit"){
-							cout<<"Byee!!"<<endl;
-							return 0;
+					wiki::getScore(net, vec, node1, depth, depth+1,
+							weight, wiki::booleanScore);
+					if(usethreshold){
+						vec.threshold(threshold);
+					}
+					if(debug){
+						for(auto each: vec){
+							cout<<net.getWord(each.first)<<" : "<<each.second<<' ';
 						}
-						phrase.push_back(words);
-						break;
+						cout<<endl;
 					}
-					else if(words.size() >= 2){
-						phrase.push_back(words);
-						break;
-					}
-					else{
-							cout<<"Format should be : phrase1 \\n phrase2 \\n,"
-							   " where words are strings , all separated by gaps"
-							   " or the word exit alone, to end the programme"<<endl;
-						break;
-					}
+					total += vec;
 				}
+				vecs.push_back(vec);
 			}
+			cout<<cosSim(vecs[0],vecs[1])<<endl;
+		}
 
-			if(mode == "boolean"){
-				bool weight = 1;
-				vector< sv::SparseVec<bool> > vecs;
-				sv::SparseVec<bool> total;
-				for(int numphrase=0; numphrase < pcomp; numphrase++){
-					sv::SparseVec<bool> vec;
-					for(auto each : phrase[numphrase]){
-						wiki::WordNode* node1 = net.getNode(each);
-						if(node1 == nullptr){
-							net.addWord(each);	
-							node1 = net.getNode(each);
-						}
-						wiki::getScore(net, vec, node1, depth, depth+1,
-							   	weight, wiki::booleanScore);
-						if(usethreshold){
-							vec.threshold(threshold);
-						}
-						if(debug){
-							for(auto each: vec){
-								cout<<net.getWord(each.first)<<" : "<<each.second<<' ';
-							}
-							cout<<endl;
-						}
-						total += vec;
+		if(mode == "count"){
+			int weight = 1;
+			vector< sv::SparseVec<int> > vecs;
+			sv::SparseVec<int> total;
+			for(int numphrase=0; numphrase < pcomp; numphrase++){
+				sv::SparseVec<int> vec;
+				for(auto each : phrase[numphrase]){
+					wiki::WordNode* node1 = net.getNode(each);
+					if(node1 == nullptr){
+						net.addWord(each);	
+						node1 = net.getNode(each);
 					}
-					vecs.push_back(vec);
+					wiki::getScore(net, vec, node1, depth,
+							depth+1, weight, wiki::countScore);
+					if(usethreshold){
+						vec.threshold(threshold);
+					}
+					if(debug){
+						for(auto each: vec){
+							cout<<net.getWord(each.first)<<" : "<<each.second<<' ';
+						}
+						cout<<endl;
+					}
+					total += vec;
 				}
-				cout<<cosSim(vecs[0],vecs[1])<<endl;
+				vecs.push_back(vec);
 			}
+			cout<<cosSim(vecs[0],vecs[1])<<endl;
+		}
 
-			if(mode == "count"){
-				int weight = 1;
-				vector< sv::SparseVec<int> > vecs;
-				sv::SparseVec<int> total;
-				for(int numphrase=0; numphrase < pcomp; numphrase++){
-					sv::SparseVec<int> vec;
-					for(auto each : phrase[numphrase]){
-						wiki::WordNode* node1 = net.getNode(each);
-						if(node1 == nullptr){
-							net.addWord(each);	
-							node1 = net.getNode(each);
-						}
-						wiki::getScore(net, vec, node1, depth,
-							   	depth+1, weight, wiki::countScore);
-						if(usethreshold){
-							vec.threshold(threshold);
-						}
-						if(debug){
-							for(auto each: vec){
-								cout<<net.getWord(each.first)<<" : "<<each.second<<' ';
-							}
-							cout<<endl;
-						}
-						total += vec;
+		if(mode == "countdepth"){
+			double weight = 1.0;
+			vector< sv::SparseVec<double> > vecs;
+			sv::SparseVec<double> total;
+			for(int numphrase=0; numphrase < pcomp; numphrase++){
+				sv::SparseVec<double> vec;
+				for(auto each : phrase[numphrase]){
+					wiki::WordNode* node1 = net.getNode(each);
+					if(node1 == nullptr){
+						net.addWord(each);	
+						node1 = net.getNode(each);
 					}
-					vecs.push_back(vec);
+					wiki::getScore(net, vec, node1, depth,
+							depth+1, weight, wiki::recursiveSimilarity);
+					if(usethreshold){
+						vec.threshold(threshold);
+					}
+					if(debug){
+						for(auto each: vec){
+							cout<<net.getWord(each.first)<<" : "<<each.second<<' ';
+						}
+						cout<<endl;
+					}
+					total += vec;
 				}
-				cout<<cosSim(vecs[0],vecs[1])<<endl;
+				vecs.push_back(vec);
 			}
+			cout<<cosSim(vecs[0],vecs[1])<<endl;
+		}
 
-			if(mode == "countdepth"){
-				double weight = 1.0;
-				vector< sv::SparseVec<double> > vecs;
-				sv::SparseVec<double> total;
-				for(int numphrase=0; numphrase < pcomp; numphrase++){
-					sv::SparseVec<double> vec;
-					for(auto each : phrase[numphrase]){
-						wiki::WordNode* node1 = net.getNode(each);
-						if(node1 == nullptr){
-							net.addWord(each);	
-							node1 = net.getNode(each);
-						}
-						wiki::getScore(net, vec, node1, depth,
-							   	depth+1, weight, wiki::recursiveSimilarity);
-						if(usethreshold){
-							vec.threshold(threshold);
-						}
-						if(debug){
-							for(auto each: vec){
-								cout<<net.getWord(each.first)<<" : "<<each.second<<' ';
-							}
-							cout<<endl;
-						}
-						total += vec;
+		if(mode == "recursive"){
+			double weight = 1.0;
+			vector< sv::SparseVec<double> > vecs;
+			sv::SparseVec<double> total;
+			for(int numphrase=0; numphrase < pcomp; numphrase++){
+				sv::SparseVec<double> vec;
+				for(auto each : phrase[numphrase]){
+					wiki::WordNode* node1 = net.getNode(each);
+					if(node1 == nullptr){
+						net.addWord(each);	
+						node1 = net.getNode(each);
 					}
-					vecs.push_back(vec);
+					wiki::getRecursiveScore(net, vec, node1, node1, depth,
+							depth+1, weight, wiki::recursiveSimilarity);
+					if(usethreshold){
+						vec.threshold(threshold);
+					}
+					if(debug){
+						for(auto each: vec){
+							cout<<net.getWord(each.first)<<" : "<<each.second<<' ';
+						}
+						cout<<endl;
+					}
+					total += vec;
 				}
-				cout<<cosSim(vecs[0],vecs[1])<<endl;
+				vecs.push_back(vec);
 			}
+			cout<<cosSim(vecs[0],vecs[1])<<endl;
+		}
 
-			if(mode == "recursive"){
-				double weight = 1.0;
-				vector< sv::SparseVec<double> > vecs;
-				sv::SparseVec<double> total;
-				for(int numphrase=0; numphrase < pcomp; numphrase++){
-					sv::SparseVec<double> vec;
-					for(auto each : phrase[numphrase]){
-						wiki::WordNode* node1 = net.getNode(each);
-						if(node1 == nullptr){
-							net.addWord(each);	
-							node1 = net.getNode(each);
-						}
-						wiki::getRecursiveScore(net, vec, node1, node1, depth,
-							   	depth+1, weight, wiki::recursiveSimilarity);
-						if(usethreshold){
-							vec.threshold(threshold);
-						}
-						if(debug){
-							for(auto each: vec){
-								cout<<net.getWord(each.first)<<" : "<<each.second<<' ';
-							}
-							cout<<endl;
-						}
-						total += vec;
+		if(mode == "dispersion"){
+			double weight = 1.0;
+			vector< sv::SparseVec<double> > vecs;
+			sv::SparseVec<double> total;
+			for(int numphrase=0; numphrase < pcomp; numphrase++){
+				sv::SparseVec<double> vec;
+				for(auto each : phrase[numphrase]){
+					wiki::WordNode* node1 = net.getNode(each);
+					if(node1 == nullptr){
+						net.addWord(each);	
+						node1 = net.getNode(each);
 					}
-					vecs.push_back(vec);
+					wiki::getDispersionScore(net, vec, node1, depth, weight);
+					if(usethreshold){
+						vec.threshold(threshold);
+					}
+					if(debug){
+						for(auto each: vec){
+							cout<<net.getWord(each.first)<<" : "<<each.second<<' ';
+						}
+						cout<<endl;
+					}
+					total += vec;
 				}
-				cout<<cosSim(vecs[0],vecs[1])<<endl;
+				vecs.push_back(vec);
 			}
+			cout<<cosSim(vecs[0],vecs[1])<<endl;
+		}
 
-			if(mode == "dispersion"){
-				double weight = 1.0;
-				vector< sv::SparseVec<double> > vecs;
-				sv::SparseVec<double> total;
-				for(int numphrase=0; numphrase < pcomp; numphrase++){
-					sv::SparseVec<double> vec;
-					for(auto each : phrase[numphrase]){
-						wiki::WordNode* node1 = net.getNode(each);
-						if(node1 == nullptr){
-							net.addWord(each);	
-							node1 = net.getNode(each);
-						}
-						wiki::getDispersionScore(net, vec, node1, depth, weight);
-						if(usethreshold){
-							vec.threshold(threshold);
-						}
-						if(debug){
-							for(auto each: vec){
-								cout<<net.getWord(each.first)<<" : "<<each.second<<' ';
-							}
-							cout<<endl;
-						}
-						total += vec;
+		if(mode == "dispersion+"){
+			double weight = 1.0;
+			vector< sv::SparseVec<double> > vecs;
+			sv::SparseVec<double> total;
+			for(int numphrase=0; numphrase < pcomp; numphrase++){
+				sv::SparseVec<double> vec;
+				for(auto each : phrase[numphrase]){
+					wiki::WordNode* node1 = net.getNode(each);
+					if(node1 == nullptr){
+						net.addWord(each);	
+						node1 = net.getNode(each);
 					}
-					vecs.push_back(vec);
+					wiki::getIterativeDispersionScore(net, vec, node1, depth, weight);
+					if(usethreshold){
+						vec.threshold(threshold);
+					}
+					if(debug){
+						for(auto each: vec){
+							cout<<net.getWord(each.first)<<" : "<<each.second<<' ';
+						}
+						cout<<endl;
+					}
+					total += vec;
 				}
-				cout<<cosSim(vecs[0],vecs[1])<<endl;
+				vecs.push_back(vec);
 			}
+			cout<<cosSim(vecs[0],vecs[1])<<endl;
+		}
 
-			if(mode == "dispersion+"){
-				double weight = 1.0;
-				vector< sv::SparseVec<double> > vecs;
-				sv::SparseVec<double> total;
-				for(int numphrase=0; numphrase < pcomp; numphrase++){
-					sv::SparseVec<double> vec;
-					for(auto each : phrase[numphrase]){
-						wiki::WordNode* node1 = net.getNode(each);
-						if(node1 == nullptr){
-							net.addWord(each);	
-							node1 = net.getNode(each);
-						}
-						wiki::getIterativeDispersionScore(net, vec, node1, depth, weight);
-						if(usethreshold){
-							vec.threshold(threshold);
-						}
-						if(debug){
-							for(auto each: vec){
-								cout<<net.getWord(each.first)<<" : "<<each.second<<' ';
-							}
-							cout<<endl;
-						}
-						total += vec;
+		if(mode == "concentration+"){
+			double weight = 1.0;
+			vector< sv::SparseVec<double> > vecs;
+			sv::SparseVec<double> total;
+			for(int numphrase=0; numphrase < pcomp; numphrase++){
+				sv::SparseVec<double> vec;
+				for(auto each : phrase[numphrase]){
+					wiki::WordNode* node1 = net.getNode(each);
+					if(node1 == nullptr){
+						net.addWord(each);	
+						node1 = net.getNode(each);
 					}
-					vecs.push_back(vec);
+					wiki::getIterativeConcentrationScore(net, vec, node1, depth, weight);
+					if(usethreshold){
+						vec.threshold(threshold);
+					}
+					if(debug){
+						for(auto each: vec){
+							cout<<net.getWord(each.first)<<" : "<<each.second<<' ';
+						}
+						cout<<endl;
+					}
+					total += vec;
 				}
-				cout<<cosSim(vecs[0],vecs[1])<<endl;
+				vecs.push_back(vec);
 			}
+			cout<<cosSim(vecs[0],vecs[1])<<endl;
+		}
 
-			if(mode == "concentration+"){
-				double weight = 1.0;
-				vector< sv::SparseVec<double> > vecs;
-				sv::SparseVec<double> total;
-				for(int numphrase=0; numphrase < pcomp; numphrase++){
-					sv::SparseVec<double> vec;
-					for(auto each : phrase[numphrase]){
-						wiki::WordNode* node1 = net.getNode(each);
-						if(node1 == nullptr){
-							net.addWord(each);	
-							node1 = net.getNode(each);
-						}
-						wiki::getIterativeConcentrationScore(net, vec, node1, depth, weight);
-						if(usethreshold){
-							vec.threshold(threshold);
-						}
-						if(debug){
-							for(auto each: vec){
-								cout<<net.getWord(each.first)<<" : "<<each.second<<' ';
-							}
-							cout<<endl;
-						}
-						total += vec;
+		if(mode == "robinhood"){
+			double weight = 1.0;
+			vector< sv::SparseVec<double> > vecs;
+			sv::SparseVec<double> total;
+			for(int numphrase=0; numphrase < pcomp; numphrase++){
+				sv::SparseVec<double> vec;
+				for(auto each : phrase[numphrase]){
+					wiki::WordNode* node1 = net.getNode(each);
+					if(node1 == nullptr){
+						net.addWord(each);	
+						node1 = net.getNode(each);
 					}
-					vecs.push_back(vec);
-				}
-				cout<<cosSim(vecs[0],vecs[1])<<endl;
-			}
-
-			if(mode == "robinhood"){
-				double weight = 1.0;
-				vector< sv::SparseVec<double> > vecs;
-				sv::SparseVec<double> total;
-				for(int numphrase=0; numphrase < pcomp; numphrase++){
-					sv::SparseVec<double> vec;
-					for(auto each : phrase[numphrase]){
-						wiki::WordNode* node1 = net.getNode(each);
-						if(node1 == nullptr){
-							net.addWord(each);	
-							node1 = net.getNode(each);
-						}
-						wiki::getRobinHoodScore(net, vec, node1, depth, weight);
-						if(usethreshold){
-							vec.threshold(threshold);
-						}
-						if(debug){
-							for(auto each: vec){
-								cout<<net.getWord(each.first)<<" : "<<each.second<<' ';
-							}
-							cout<<endl;
-						}
-						total += vec;
+					wiki::getRobinHoodScore(net, vec, node1, depth, weight);
+					if(usethreshold){
+						vec.threshold(threshold);
 					}
-					vecs.push_back(vec);
+					if(debug){
+						for(auto each: vec){
+							cout<<net.getWord(each.first)<<" : "<<each.second<<' ';
+						}
+						cout<<endl;
+					}
+					total += vec;
 				}
-				cout<<cosSim(vecs[0],vecs[1])<<endl;
+				vecs.push_back(vec);
 			}
+			cout<<cosSim(vecs[0],vecs[1])<<endl;
+		}
 
 	}
 }
