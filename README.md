@@ -30,7 +30,9 @@ and can be replaced with your own.
 3. make
 4. ./wordsim for word similarity or ./phrasesim for phrase similarity
 
-example: ./wordsim 3 dispersion+
+example: 
+
+./wordsim 3 dispersion+
 
 * The integer is how many neighbours away in the graph the method should go
 * The string is the method to use: boolean, count, countdepth, recursive, dispersion, dispersion+, concentration, concentration+
